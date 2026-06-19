@@ -240,7 +240,8 @@ public class InstancedRenderRegistry {
 			if (skipRender == null) {
 				skipRender = be -> false;
 			}
-			SimpleBlockEntityInstancingController<T> controller = new SimpleBlockEntityInstancingController<>(instanceFactory, skipRender);
+			SimpleBlockEntityInstancingController<T> controller =
+					new SimpleBlockEntityInstancingController<>(instanceFactory, skipRender);
 			setController(type, controller);
 			return controller;
 		}
@@ -297,7 +298,8 @@ public class InstancedRenderRegistry {
 			if (skipRender == null) {
 				skipRender = entity -> false;
 			}
-			SimpleEntityInstancingController<T> controller = new SimpleEntityInstancingController<>(instanceFactory, skipRender);
+			SimpleEntityInstancingController<T> controller =
+					new SimpleEntityInstancingController<>(instanceFactory, skipRender);
 			setController(type, controller);
 			return controller;
 		}

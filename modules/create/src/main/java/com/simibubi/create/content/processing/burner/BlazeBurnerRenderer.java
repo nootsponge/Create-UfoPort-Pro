@@ -23,6 +23,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
@@ -93,34 +94,33 @@ public class BlazeBurnerRenderer extends SafeBlockEntityRenderer<BlazeBurnerBloc
 		if (canDrawFlame && blockAbove) {
 			SpriteShiftEntry spriteShift =
 				heatLevel == HeatLevel.SEETHING ? AllSpriteShifts.SUPER_BURNER_FLAME : AllSpriteShifts.BURNER_FLAME;
+			TextureAtlasSprite target = spriteShift.getTarget();
 
-			float spriteWidth = spriteShift.getTarget()
-				.getU1()
-				- spriteShift.getTarget()
-					.getU0();
+			if (target != null && spriteShift.getOriginal() != null) {
+				float spriteWidth = target.getU1()
+					- target.getU0();
 
-			float spriteHeight = spriteShift.getTarget()
-				.getV1()
-				- spriteShift.getTarget()
-					.getV0();
+				float spriteHeight = target.getV1()
+					- target.getV0();
 
-			float speed = 1 / 32f + 1 / 64f * heatLevel.ordinal();
+				float speed = 1 / 32f + 1 / 64f * heatLevel.ordinal();
 
-			double vScroll = speed * time;
-			vScroll = vScroll - Math.floor(vScroll);
-			vScroll = vScroll * spriteHeight / 2;
+				double vScroll = speed * time;
+				vScroll = vScroll - Math.floor(vScroll);
+				vScroll = vScroll * spriteHeight / 2;
 
-			double uScroll = speed * time / 2;
-			uScroll = uScroll - Math.floor(uScroll);
-			uScroll = uScroll * spriteWidth / 2;
-			
-			VertexConsumer cutout = bufferSource.getBuffer(RenderType.cutoutMipped());
-			
-			SuperByteBuffer flameBuffer = CachedBufferer.partial(AllPartialModels.BLAZE_BURNER_FLAME, blockState);
-			if (modelTransform != null)
-				flameBuffer.transform(modelTransform);
-			flameBuffer.shiftUVScrolling(spriteShift, (float) uScroll, (float) vScroll);
-			draw(flameBuffer, horizontalAngle, ms, cutout);
+				double uScroll = speed * time / 2;
+				uScroll = uScroll - Math.floor(uScroll);
+				uScroll = uScroll * spriteWidth / 2;
+				
+				VertexConsumer cutout = bufferSource.getBuffer(RenderType.cutoutMipped());
+				
+				SuperByteBuffer flameBuffer = CachedBufferer.partial(AllPartialModels.BLAZE_BURNER_FLAME, blockState);
+				if (modelTransform != null)
+					flameBuffer.transform(modelTransform);
+				flameBuffer.shiftUVScrolling(spriteShift, (float) uScroll, (float) vScroll);
+				draw(flameBuffer, horizontalAngle, ms, cutout);
+			}
 		}
 
 		PartialModel blazeModel;

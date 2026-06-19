@@ -14,11 +14,13 @@ import com.jozufozu.flywheel.backend.gl.buffer.GlBufferUsage;
 import com.jozufozu.flywheel.backend.model.ElementBuffer;
 import com.jozufozu.flywheel.core.Formats;
 import com.jozufozu.flywheel.core.QuadConverter;
+import com.jozufozu.flywheel.core.vertex.BlockVertexList;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat.IndexType;
 
 import net.minecraft.client.Minecraft;
@@ -36,11 +38,8 @@ public class BlockModel implements Model {
 
 	public BlockModel(ByteBuffer vertexBuffer, ByteBuffer indexBuffer, MeshData meshData, int unshadedStartVertex, String name) {
 		MeshData.DrawState drawState = meshData.drawState();
-		if (drawState.format() != DefaultVertexFormat.BLOCK) {
-			throw new RuntimeException("Cannot use buffered data with non-block format '" + drawState.format() + "'");
-		}
 
-		reader = Formats.BLOCK.createReader(vertexBuffer, drawState.vertexCount(), unshadedStartVertex);
+		reader = createBlockReader(vertexBuffer, drawState, unshadedStartVertex);
 
 		this.name = name;
 
@@ -54,12 +53,8 @@ public class BlockModel implements Model {
 
 	public BlockModel(ByteBuffer vertexBuffer, ByteBuffer indexBuffer, MeshData meshData, String name) {
 		MeshData.DrawState drawState = meshData.drawState();
-		
-		if (drawState.format() != DefaultVertexFormat.BLOCK) {
-			throw new RuntimeException("Cannot use buffered data with non-block format '" + drawState.format() + "'");
-		}
 
-		reader = Formats.BLOCK.createReader(vertexBuffer, drawState.vertexCount());
+		reader = createBlockReader(vertexBuffer, drawState);
 
 		this.name = name;
 
@@ -132,6 +127,57 @@ public class BlockModel implements Model {
 	public void delete() {
 		reader.delete();
 		eboSupplier.delete();
+	}
+
+	private static VertexList createBlockReader(ByteBuffer vertexBuffer, MeshData.DrawState drawState) {
+		int stride = getBlockStride(drawState);
+		if (stride == DefaultVertexFormat.BLOCK.getVertexSize()) {
+			return Formats.BLOCK.createReader(vertexBuffer, drawState.vertexCount());
+		}
+
+		return new BlockVertexList(vertexBuffer, drawState.vertexCount(), stride);
+	}
+
+	private static VertexList createBlockReader(ByteBuffer vertexBuffer, MeshData.DrawState drawState, int unshadedStartVertex) {
+		int stride = getBlockStride(drawState);
+		if (stride == DefaultVertexFormat.BLOCK.getVertexSize()) {
+			return Formats.BLOCK.createReader(vertexBuffer, drawState.vertexCount(), unshadedStartVertex);
+		}
+
+		return new BlockVertexList.Shaded(vertexBuffer, drawState.vertexCount(), stride, unshadedStartVertex);
+	}
+
+	private static int getBlockStride(MeshData.DrawState drawState) {
+		VertexFormat format = drawState.format();
+		if (!isBlockCompatible(format)) {
+			throw new RuntimeException("Cannot use buffered data with non-block format '" + format + "'");
+		}
+
+		return format.getVertexSize();
+	}
+
+	private static boolean isBlockCompatible(VertexFormat format) {
+		if (format == DefaultVertexFormat.BLOCK) {
+			return true;
+		}
+
+		if (format.getVertexSize() < DefaultVertexFormat.BLOCK.getVertexSize()) {
+			return false;
+		}
+
+		var expectedElements = DefaultVertexFormat.BLOCK.getElements();
+		var actualElements = format.getElements();
+		if (actualElements.size() < expectedElements.size()) {
+			return false;
+		}
+
+		for (int i = 0; i < expectedElements.size(); i++) {
+			if (!actualElements.get(i).equals(expectedElements.get(i))) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	private interface EBOSupplier extends Supplier<ElementBuffer> {

@@ -11,13 +11,13 @@ import javax.annotation.Nullable;
 import com.jozufozu.flywheel.api.MaterialManager;
 import com.jozufozu.flywheel.backend.instancing.InstancedRenderRegistry;
 import com.jozufozu.flywheel.backend.instancing.blockentity.BlockEntityInstance;
-import com.simibubi.create.Create;
 import com.tterrag.registrate.AbstractRegistrate;
 import com.tterrag.registrate.builders.BlockEntityBuilder;
 import com.tterrag.registrate.builders.BuilderCallback;
 import com.tterrag.registrate.fabric.EnvExecutor;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 
+import dev.engine_room.flywheel.lib.visualization.SimpleBlockEntityVisualizer;
 import net.fabricmc.api.EnvType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -27,7 +27,10 @@ public class CreateBlockEntityBuilder<T extends BlockEntity, P> extends BlockEnt
 
 	@Nullable
 	private NonNullSupplier<BiFunction<MaterialManager, T, BlockEntityInstance<? super T>>> instanceFactory;
-	private Predicate<T> renderNormally;
+	private Predicate<T> instanceRenderNormally;
+	@Nullable
+	private NonNullSupplier<SimpleBlockEntityVisualizer.Factory<T>> visualFactory;
+	private Predicate<T> visualRenderNormally;
 
 	private Collection<NonNullSupplier<? extends Collection<NonNullSupplier<? extends Block>>>> deferredValidBlocks =
 		new ArrayList<>();
@@ -76,7 +79,7 @@ public class CreateBlockEntityBuilder<T extends BlockEntity, P> extends BlockEnt
 		}
 
 		this.instanceFactory = instanceFactory;
-		this.renderNormally = renderNormally;
+		this.instanceRenderNormally = renderNormally;
 
 		return this;
 	}
@@ -85,8 +88,44 @@ public class CreateBlockEntityBuilder<T extends BlockEntity, P> extends BlockEnt
 		onRegister(entry ->
 				InstancedRenderRegistry.configure(entry)
 						.factory(instanceFactory.get())
-						.skipRender(be -> !renderNormally.test(be))
+						.skipRender(be -> !instanceRenderNormally.test(be))
 						.apply()
 		);
+	}
+
+	public CreateBlockEntityBuilder<T, P> visual(
+		NonNullSupplier<SimpleBlockEntityVisualizer.Factory<T>> visualFactory) {
+		return visual(visualFactory, true);
+	}
+
+	public CreateBlockEntityBuilder<T, P> visual(
+		NonNullSupplier<SimpleBlockEntityVisualizer.Factory<T>> visualFactory,
+		boolean renderNormally) {
+		return visual(visualFactory, be -> renderNormally);
+	}
+
+	public CreateBlockEntityBuilder<T, P> visual(
+		NonNullSupplier<SimpleBlockEntityVisualizer.Factory<T>> visualFactory,
+		Predicate<T> renderNormally) {
+		if (this.visualFactory == null) {
+			EnvExecutor.runWhenOn(EnvType.CLIENT, () -> this::registerVisualizer);
+		}
+
+		this.visualFactory = visualFactory;
+		this.visualRenderNormally = renderNormally;
+
+		return this;
+	}
+
+	protected void registerVisualizer() {
+		onRegister(entry -> {
+			var visualFactory = this.visualFactory;
+			if (visualFactory != null) {
+				SimpleBlockEntityVisualizer.builder(entry)
+					.factory(visualFactory.get())
+					.skipVanillaRender(be -> !visualRenderNormally.test(be))
+					.apply();
+			}
+		});
 	}
 }

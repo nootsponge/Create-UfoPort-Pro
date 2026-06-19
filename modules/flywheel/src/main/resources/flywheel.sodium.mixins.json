@@ -5,7 +5,8 @@
   "plugin": "com.jozufozu.flywheel.mixin.sodium.SodiumMixinPlugin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "ChunkBuilderMeshingTaskMixin"
+    "ChunkBuilderMeshingTaskMixin",
+    "SodiumWorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

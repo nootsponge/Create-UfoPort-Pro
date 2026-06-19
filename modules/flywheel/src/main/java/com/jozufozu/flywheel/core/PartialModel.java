@@ -67,7 +67,7 @@ public class PartialModel {
 	public static class ResourceReloadListener implements ResourceManagerReloadListener, IdentifiableResourceReloadListener {
 		public static final ResourceReloadListener INSTANCE = new ResourceReloadListener();
 
-		public static final ResourceLocation ID = Flywheel.rl("partial_models");
+		public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("create", "legacy_partial_models");
 		public static final List<ResourceLocation> DEPENDENCIES = List.of(ResourceReloadListenerKeys.MODELS);
 
 		@Override

@@ -2,6 +2,7 @@ package com.jozufozu.flywheel.event;
 
 import javax.annotation.Nullable;
 
+import org.joml.Matrix4fc;
 import org.joml.Matrix4f;
 
 import com.jozufozu.flywheel.backend.RenderLayer;
@@ -26,13 +27,17 @@ public class RenderLayerEvent extends EventContext {
 	public final RenderLayer layer;
 
 	public RenderLayerEvent(ClientLevel world, RenderType type, PoseStack stack, RenderBuffers buffers, double camX, double camY, double camZ) {
+		this(world, type, stack, buffers, camX, camY, camZ, stack.last()
+				.pose(), RenderSystem.getProjectionMatrix());
+	}
+
+	public RenderLayerEvent(ClientLevel world, RenderType type, PoseStack stack, RenderBuffers buffers, double camX, double camY, double camZ, Matrix4fc modelView, Matrix4fc projection) {
 		this.world = world;
 		this.type = type;
 		this.stack = stack;
 
-		viewProjection = new Matrix4f(stack.last()
-				.pose());
-        viewProjection.mulLocal(RenderSystem.getProjectionMatrix());
+		viewProjection = new Matrix4f(modelView);
+		viewProjection.mulLocal(projection);
 
 		this.buffers = buffers;
 		this.camX = camX;

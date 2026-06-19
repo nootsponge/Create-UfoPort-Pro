@@ -24,7 +24,7 @@ public class AllPartialModels {
 
 			SHAFTLESS_COGWHEEL = block("cogwheel_shaftless"),
 			SHAFTLESS_LARGE_COGWHEEL = block("large_cogwheel_shaftless"), COGWHEEL_SHAFT = block("cogwheel_shaft"),
-			SHAFT_HALF = block("shaft_half"),
+			SHAFT_HALF = block("shaft_half"), SHAFT = block("shaft"), COGWHEEL = block("cogwheel"),
 
 			BELT_PULLEY = block("belt_pulley"), BELT_START = block("belt/start"), BELT_MIDDLE = block("belt/middle"),
 			BELT_END = block("belt/end"), BELT_START_BOTTOM = block("belt/start_bottom"),
@@ -177,6 +177,8 @@ public class AllPartialModels {
 
 			WATER_WHEEL = block("water_wheel/wheel"), LARGE_WATER_WHEEL = block("large_water_wheel/block"),
 			LARGE_WATER_WHEEL_EXTENSION = block("large_water_wheel/block_extension"),
+			CRUSHING_WHEEL = block("crushing_wheel/block"), TURNTABLE = block("turntable"),
+			POWERED_SHAFT = block("powered_shaft"),
 
 			CRAFTING_BLUEPRINT_1x1 = entity("crafting_blueprint_small"),
 			CRAFTING_BLUEPRINT_2x2 = entity("crafting_blueprint_medium"),

@@ -99,6 +99,14 @@ public class Flywheel implements ClientModInitializer {
 	}
 
 	public static Version getVersion() {
+		if (version == null) {
+			version = FabricLoader.getInstance()
+				.getModContainer("flywheel")
+				.or(() -> FabricLoader.getInstance().getModContainer("create_flywheel_compat"))
+				.or(() -> FabricLoader.getInstance().getModContainer("create"))
+				.map(mod -> mod.getMetadata().getVersion())
+				.orElse(null);
+		}
 		return version;
 	}
 

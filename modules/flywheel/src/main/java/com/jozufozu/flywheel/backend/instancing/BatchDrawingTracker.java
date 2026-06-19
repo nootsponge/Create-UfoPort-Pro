@@ -18,11 +18,6 @@ import net.minecraft.client.renderer.RenderType;
 public class BatchDrawingTracker {
 
 	protected final Set<RenderType> activeTypes = new HashSet<>();
-	private final ByteBufferBuilder scratch;
-
-	public BatchDrawingTracker() {
-		scratch = new ByteBufferBuilder(8);
-	}
 
 	/**
 	 * Get a direct vertex consumer for drawing the given number of vertices to the given RenderType.
@@ -73,7 +68,8 @@ public class BatchDrawingTracker {
 
 	private void _draw(RenderType renderType) {
 		DrawBuffer drawBuffer = RenderTypeExtension.getDrawBuffer(renderType);
-		BufferBuilder scratch = new BufferBuilder(this.scratch, renderType.mode(), renderType.format());
+		ByteBufferBuilder scratchBuffer = new ByteBufferBuilder(8);
+		BufferBuilder scratch = new BufferBuilder(scratchBuffer, renderType.mode(), renderType.format());
 		((BufferBuilderExtension) scratch).flywheel$freeBuffer();
 
 		BufferBuilderExtension scratch2 = (BufferBuilderExtension) scratch;

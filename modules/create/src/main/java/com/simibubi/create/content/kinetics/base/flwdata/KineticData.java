@@ -40,11 +40,7 @@ public class KineticData extends BasicData {
     }
 
     public KineticData setColor(KineticBlockEntity blockEntity) {
-        if (blockEntity.hasNetwork()) {
-            setColor(Color.generateFromLong(blockEntity.network));
-        }else {
-            setColor(0xFF, 0xFF, 0xFF);
-        }
+        setColor(Color.WHITE);
         return this;
     }
 

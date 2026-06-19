@@ -63,9 +63,13 @@ public class DrawBuffer {
 	 * @param bufferBuilder The buffer builder to inject into.
 	 */
 	public ByteBufferBuilder inject(BufferBuilderExtension bufferBuilder) {
-		ByteBufferBuilder builder = new ByteBufferBuilder(backingBuffer.remaining());
-		long pntr = builder.reserve(backingBuffer.remaining());
-		MemoryUtil.memCopy(MemoryUtil.memAddress(backingBuffer), pntr, backingBuffer.remaining());
+		int vertexSize = parent.format().getVertexSize();
+		int vertexBytes = vertexSize * expectedVertices;
+		int reservedBytes = vertexSize * (expectedVertices + 1);
+		ByteBufferBuilder builder = new ByteBufferBuilder(reservedBytes);
+		long pntr = builder.reserve(reservedBytes);
+		MemoryUtil.memSet(pntr, 0, reservedBytes);
+		MemoryUtil.memCopy(MemoryUtil.memAddress(backingBuffer), pntr, vertexBytes);
 		bufferBuilder.flywheel$injectForRender(builder, parent.format(), expectedVertices);
 		return builder;
 	}

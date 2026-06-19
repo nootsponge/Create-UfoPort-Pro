@@ -3,7 +3,6 @@ import io.github.fabricators_of_create.porting_lib_build.PortingLibBuildPlugin
 
 plugins {
     id "fabric-loom"
-    id "io.github.p03w.machete" version "1.1.4" // automatic jar compressing on build
 
     id "com.modrinth.minotaur" version "2.+" // modrinth publishing
     id "com.matthewprenger.cursegradle" version "1.+" // curseforge publishing
@@ -34,6 +33,7 @@ repositories {
     maven { url = "https://maven.dblsaiko.net/" }
     maven { url = "https://maven.vram.io/" }
     maven { url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/" } // Forge Config API Port
+    maven { url = "https://maven.createmod.net/" } // Flywheel 1.x
     maven { url = "https://maven.tterrag.com/" } // Flywheel
     maven { url = "https://maven.shedaniel.me/" } // REI and deps
     maven { url = "https://api.modrinth.com/maven" } // LazyDFU, Sodium, Sandwichable
@@ -83,6 +83,8 @@ def compat(DependencyHandler deps) {
         deps.modCompileOnly("maven.modrinth:sodium:$sodium_version")
         deps.modCompileOnly("maven.modrinth:indium:$indium_version")
         deps.modCompileOnly("maven.modrinth:iris:$iris_version")
+        deps.modCompileOnly("dev.engine-room.flywheel:flywheel-fabric-api-$flywheel_minecraft_version:$flywheel_version") { transitive = false }
+        deps.modLocalRuntime("dev.engine-room.flywheel:flywheel-fabric-$flywheel_minecraft_version:$flywheel_version") { transitive = false }
 
         recipeViewers(deps)
 }
@@ -115,6 +117,7 @@ allprojects {
     		maven { url = "https://maven.dblsaiko.net/" }
     		maven { url = "https://maven.vram.io/" }
     		maven { url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/" } // Forge Config API Port
+    		maven { url = "https://maven.createmod.net/" } // Flywheel 1.x
     		maven { url = "https://maven.tterrag.com/" } // Flywheel
     		maven { url = "https://api.modrinth.com/maven" } // LazyDFU, Sodium, Sandwichable
     		maven { url = "https://maven.terraformersmc.com/" } // Mod Menu, Trinkets
@@ -152,6 +155,9 @@ allprojects {
 		properties.forEach(inputs::property)
 
 		if (project != rootProject) { // expand subproject FMJs. Must be done here for proper ordering.
+			inputs.property(FmjExpander.SKIP_AUTOMATIC_MIXINS_PARAM, providers.provider {
+				project.findProperty(FmjExpander.SKIP_AUTOMATIC_MIXINS_PARAM)?.toString() ?: "false"
+			})
 			filesMatching("fabric.mod.json", new FmjExpander.Applicator(project))
 		}
 
@@ -163,6 +169,12 @@ allprojects {
 	tasks.withType(JavaCompile).configureEach {
     		it.options.release.set(21)
 	}
+}
+
+dependencies {
+	def bundledFlywheel = create("dev.engine-room.flywheel:flywheel-fabric-$flywheel_minecraft_version:$flywheel_version")
+	bundledFlywheel.transitive = false
+	include(bundledFlywheel)
 }
 
 subprojects {

@@ -74,14 +74,13 @@ import com.simibubi.create.content.fluids.spout.SpoutRenderer;
 import com.simibubi.create.content.fluids.tank.CreativeFluidTankBlockEntity;
 import com.simibubi.create.content.fluids.tank.FluidTankBlockEntity;
 import com.simibubi.create.content.fluids.tank.FluidTankRenderer;
-import com.simibubi.create.content.kinetics.base.CutoutRotatingInstance;
 import com.simibubi.create.content.kinetics.base.HalfShaftInstance;
 import com.simibubi.create.content.kinetics.base.HorizontalHalfShaftInstance;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
-import com.simibubi.create.content.kinetics.base.ShaftInstance;
+import com.simibubi.create.content.kinetics.base.OrientedRotatingVisual;
 import com.simibubi.create.content.kinetics.base.ShaftRenderer;
-import com.simibubi.create.content.kinetics.base.SingleRotatingInstance;
+import com.simibubi.create.content.kinetics.base.SingleAxisRotatingVisual;
 import com.simibubi.create.content.kinetics.belt.BeltBlockEntity;
 import com.simibubi.create.content.kinetics.belt.BeltInstance;
 import com.simibubi.create.content.kinetics.belt.BeltRenderer;
@@ -106,6 +105,7 @@ import com.simibubi.create.content.kinetics.drill.DrillRenderer;
 import com.simibubi.create.content.kinetics.fan.EncasedFanBlockEntity;
 import com.simibubi.create.content.kinetics.fan.EncasedFanRenderer;
 import com.simibubi.create.content.kinetics.fan.FanInstance;
+import com.simibubi.create.content.kinetics.fan.FanVisual;
 import com.simibubi.create.content.kinetics.fan.NozzleBlockEntity;
 import com.simibubi.create.content.kinetics.flywheel.FlywheelBlockEntity;
 import com.simibubi.create.content.kinetics.flywheel.FlywheelInstance;
@@ -118,6 +118,7 @@ import com.simibubi.create.content.kinetics.gauge.StressGaugeBlockEntity;
 import com.simibubi.create.content.kinetics.gearbox.GearboxBlockEntity;
 import com.simibubi.create.content.kinetics.gearbox.GearboxInstance;
 import com.simibubi.create.content.kinetics.gearbox.GearboxRenderer;
+import com.simibubi.create.content.kinetics.gearbox.GearboxVisual;
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmBlockEntity;
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmInstance;
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmRenderer;
@@ -138,9 +139,11 @@ import com.simibubi.create.content.kinetics.saw.SawRenderer;
 import com.simibubi.create.content.kinetics.simpleRelays.BracketedKineticBlockEntity;
 import com.simibubi.create.content.kinetics.simpleRelays.BracketedKineticBlockEntityInstance;
 import com.simibubi.create.content.kinetics.simpleRelays.BracketedKineticBlockEntityRenderer;
+import com.simibubi.create.content.kinetics.simpleRelays.BracketedKineticVisual;
 import com.simibubi.create.content.kinetics.simpleRelays.SimpleKineticBlockEntity;
 import com.simibubi.create.content.kinetics.simpleRelays.encased.EncasedCogInstance;
 import com.simibubi.create.content.kinetics.simpleRelays.encased.EncasedCogRenderer;
+import com.simibubi.create.content.kinetics.simpleRelays.encased.EncasedCogVisual;
 import com.simibubi.create.content.kinetics.speedController.SpeedControllerBlockEntity;
 import com.simibubi.create.content.kinetics.speedController.SpeedControllerRenderer;
 import com.simibubi.create.content.kinetics.steamEngine.PoweredShaftBlockEntity;
@@ -151,12 +154,13 @@ import com.simibubi.create.content.kinetics.transmission.ClutchBlockEntity;
 import com.simibubi.create.content.kinetics.transmission.GearshiftBlockEntity;
 import com.simibubi.create.content.kinetics.transmission.SplitShaftInstance;
 import com.simibubi.create.content.kinetics.transmission.SplitShaftRenderer;
+import com.simibubi.create.content.kinetics.transmission.SplitShaftVisual;
 import com.simibubi.create.content.kinetics.transmission.sequencer.SequencedGearshiftBlockEntity;
 import com.simibubi.create.content.kinetics.turntable.TurntableBlockEntity;
 import com.simibubi.create.content.kinetics.waterwheel.LargeWaterWheelBlockEntity;
 import com.simibubi.create.content.kinetics.waterwheel.WaterWheelBlockEntity;
-import com.simibubi.create.content.kinetics.waterwheel.WaterWheelInstance;
 import com.simibubi.create.content.kinetics.waterwheel.WaterWheelRenderer;
+import com.simibubi.create.content.kinetics.waterwheel.WaterWheelVisual;
 import com.simibubi.create.content.logistics.chute.ChuteBlockEntity;
 import com.simibubi.create.content.logistics.chute.ChuteRenderer;
 import com.simibubi.create.content.logistics.chute.SmartChuteBlockEntity;
@@ -237,28 +241,28 @@ public class AllBlockEntityTypes {
 	// Kinetics
 	public static final BlockEntityEntry<BracketedKineticBlockEntity> BRACKETED_KINETIC = REGISTRATE
 		.blockEntity("simple_kinetic", BracketedKineticBlockEntity::new)
-		.instance(() -> BracketedKineticBlockEntityInstance::new, false)
+		.visual(() -> BracketedKineticVisual::new, false)
 		.validBlocks(AllBlocks.SHAFT, AllBlocks.COGWHEEL, AllBlocks.LARGE_COGWHEEL)
 		.renderer(() -> BracketedKineticBlockEntityRenderer::new)
 		.register();
 
 	public static final BlockEntityEntry<CreativeMotorBlockEntity> MOTOR = REGISTRATE
 		.blockEntity("motor", CreativeMotorBlockEntity::new)
-		.instance(() -> HalfShaftInstance::new, false)
+		.visual(() -> OrientedRotatingVisual::halfShaft, false)
 		.validBlocks(AllBlocks.CREATIVE_MOTOR)
 		.renderer(() -> CreativeMotorRenderer::new)
 		.register();
 
 	public static final BlockEntityEntry<GearboxBlockEntity> GEARBOX = REGISTRATE
 		.blockEntity("gearbox", GearboxBlockEntity::new)
-		.instance(() -> GearboxInstance::new, false)
+		.visual(() -> GearboxVisual::new, false)
 		.validBlocks(AllBlocks.GEARBOX)
 		.renderer(() -> GearboxRenderer::new)
 		.register();
 
 	public static final BlockEntityEntry<KineticBlockEntity> ENCASED_SHAFT = REGISTRATE
 		.blockEntity("encased_shaft", KineticBlockEntity::new)
-		.instance(() -> ShaftInstance::new, false)
+		.visual(() -> SingleAxisRotatingVisual::shaft, false)
 		.validBlocks(AllBlocks.ANDESITE_ENCASED_SHAFT, AllBlocks.BRASS_ENCASED_SHAFT, AllBlocks.ENCASED_CHAIN_DRIVE,
 			AllBlocks.METAL_GIRDER_ENCASED_SHAFT)
 		.renderer(() -> ShaftRenderer::new)
@@ -266,28 +270,28 @@ public class AllBlockEntityTypes {
 
 	public static final BlockEntityEntry<SimpleKineticBlockEntity> ENCASED_COGWHEEL = REGISTRATE
 		.blockEntity("encased_cogwheel", SimpleKineticBlockEntity::new)
-		.instance(() -> EncasedCogInstance::small, false)
+		.visual(() -> EncasedCogVisual::small, false)
 		.validBlocks(AllBlocks.ANDESITE_ENCASED_COGWHEEL, AllBlocks.BRASS_ENCASED_COGWHEEL)
 		.renderer(() -> EncasedCogRenderer::small)
 		.register();
 
 	public static final BlockEntityEntry<SimpleKineticBlockEntity> ENCASED_LARGE_COGWHEEL = REGISTRATE
 		.blockEntity("encased_large_cogwheel", SimpleKineticBlockEntity::new)
-		.instance(() -> EncasedCogInstance::large, false)
+		.visual(() -> EncasedCogVisual::large, false)
 		.validBlocks(AllBlocks.ANDESITE_ENCASED_LARGE_COGWHEEL, AllBlocks.BRASS_ENCASED_LARGE_COGWHEEL)
 		.renderer(() -> EncasedCogRenderer::large)
 		.register();
 
 	public static final BlockEntityEntry<ChainGearshiftBlockEntity> ADJUSTABLE_CHAIN_GEARSHIFT = REGISTRATE
 		.blockEntity("adjustable_chain_gearshift", ChainGearshiftBlockEntity::new)
-		.instance(() -> ShaftInstance::new, false)
+		.visual(() -> SingleAxisRotatingVisual::shaft, false)
 		.validBlocks(AllBlocks.ADJUSTABLE_CHAIN_GEARSHIFT)
 		.renderer(() -> ShaftRenderer::new)
 		.register();
 
 	public static final BlockEntityEntry<EncasedFanBlockEntity> ENCASED_FAN = REGISTRATE
 		.blockEntity("encased_fan", EncasedFanBlockEntity::new)
-		.instance(() -> FanInstance::new, false)
+		.visual(() -> FanVisual::new, false)
 		.validBlocks(AllBlocks.ENCASED_FAN)
 		.renderer(() -> EncasedFanRenderer::new)
 		.register();
@@ -300,21 +304,21 @@ public class AllBlockEntityTypes {
 
 	public static final BlockEntityEntry<ClutchBlockEntity> CLUTCH = REGISTRATE
 		.blockEntity("clutch", ClutchBlockEntity::new)
-		.instance(() -> SplitShaftInstance::new, false)
+		.visual(() -> SplitShaftVisual::new, false)
 		.validBlocks(AllBlocks.CLUTCH)
 		.renderer(() -> SplitShaftRenderer::new)
 		.register();
 
 	public static final BlockEntityEntry<GearshiftBlockEntity> GEARSHIFT = REGISTRATE
 		.blockEntity("gearshift", GearshiftBlockEntity::new)
-		.instance(() -> SplitShaftInstance::new, false)
+		.visual(() -> SplitShaftVisual::new, false)
 		.validBlocks(AllBlocks.GEARSHIFT)
 		.renderer(() -> SplitShaftRenderer::new)
 		.register();
 
 	public static final BlockEntityEntry<TurntableBlockEntity> TURNTABLE = REGISTRATE
 		.blockEntity("turntable", TurntableBlockEntity::new)
-		.instance(() -> SingleRotatingInstance::new, false)
+		.visual(() -> SingleAxisRotatingVisual.of(AllPartialModels.TURNTABLE), false)
 		.validBlocks(AllBlocks.TURNTABLE)
 		.renderer(() -> KineticBlockEntityRenderer::new)
 		.register();
@@ -343,7 +347,7 @@ public class AllBlockEntityTypes {
 
 	public static final BlockEntityEntry<GantryShaftBlockEntity> GANTRY_SHAFT = REGISTRATE
 		.blockEntity("gantry_shaft", GantryShaftBlockEntity::new)
-		.instance(() -> SingleRotatingInstance::new, false)
+		.visual(() -> SingleAxisRotatingVisual::new, false)
 		.validBlocks(AllBlocks.GANTRY_SHAFT)
 		.renderer(() -> KineticBlockEntityRenderer::new)
 		.register();
@@ -357,7 +361,7 @@ public class AllBlockEntityTypes {
 
 	public static final BlockEntityEntry<PumpBlockEntity> MECHANICAL_PUMP = REGISTRATE
 		.blockEntity("mechanical_pump", PumpBlockEntity::new)
-		.instance(() -> PumpCogInstance::new)
+		.visual(() -> OrientedRotatingVisual::pumpCog, false)
 		.validBlocks(AllBlocks.MECHANICAL_PUMP)
 		.renderer(() -> PumpRenderer::new)
 		.register();
@@ -469,7 +473,7 @@ public class AllBlockEntityTypes {
 
 	public static final BlockEntityEntry<MechanicalPistonBlockEntity> MECHANICAL_PISTON = REGISTRATE
 		.blockEntity("mechanical_piston", MechanicalPistonBlockEntity::new)
-		.instance(() -> ShaftInstance::new, false)
+		.visual(() -> SingleAxisRotatingVisual::shaft, false)
 		.validBlocks(AllBlocks.MECHANICAL_PISTON, AllBlocks.STICKY_MECHANICAL_PISTON)
 		.renderer(() -> MechanicalPistonRenderer::new)
 		.register();
@@ -535,7 +539,7 @@ public class AllBlockEntityTypes {
 
 	public static final BlockEntityEntry<DrillBlockEntity> DRILL = REGISTRATE
 		.blockEntity("drill", DrillBlockEntity::new)
-		.instance(() -> DrillInstance::new, false)
+		.visual(() -> OrientedRotatingVisual::drill, false)
 		.validBlocks(AllBlocks.MECHANICAL_DRILL)
 		.renderer(() -> DrillRenderer::new)
 		.register();
@@ -590,7 +594,7 @@ public class AllBlockEntityTypes {
 
 	public static final BlockEntityEntry<PoweredShaftBlockEntity> POWERED_SHAFT = REGISTRATE
 		.blockEntity("powered_shaft", PoweredShaftBlockEntity::new)
-		.instance(() -> SingleRotatingInstance::new, false)
+		.visual(() -> SingleAxisRotatingVisual.of(AllPartialModels.POWERED_SHAFT), false)
 		.validBlocks(AllBlocks.POWERED_SHAFT)
 		.renderer(() -> KineticBlockEntityRenderer::new)
 		.register();
@@ -604,14 +608,14 @@ public class AllBlockEntityTypes {
 
 	public static final BlockEntityEntry<MillstoneBlockEntity> MILLSTONE = REGISTRATE
 		.blockEntity("millstone", MillstoneBlockEntity::new)
-		.instance(() -> MillstoneCogInstance::new, false)
+		.visual(() -> OrientedRotatingVisual::millstoneCog, false)
 		.validBlocks(AllBlocks.MILLSTONE)
 		.renderer(() -> MillstoneRenderer::new)
 		.register();
 
 	public static final BlockEntityEntry<CrushingWheelBlockEntity> CRUSHING_WHEEL = REGISTRATE
 		.blockEntity("crushing_wheel", CrushingWheelBlockEntity::new)
-		.instance(() -> CutoutRotatingInstance::new, false)
+		.visual(() -> SingleAxisRotatingVisual.of(AllPartialModels.CRUSHING_WHEEL), false)
 		.validBlocks(AllBlocks.CRUSHING_WHEEL)
 		.renderer(() -> KineticBlockEntityRenderer::new)
 		.register();
@@ -625,14 +629,14 @@ public class AllBlockEntityTypes {
 
 	public static final BlockEntityEntry<WaterWheelBlockEntity> WATER_WHEEL = REGISTRATE
 		.blockEntity("water_wheel", WaterWheelBlockEntity::new)
-		.instance(() -> WaterWheelInstance::standard, false)
+		.visual(() -> WaterWheelVisual::standard, false)
 		.validBlocks(AllBlocks.WATER_WHEEL)
 		.renderer(() -> WaterWheelRenderer::standard)
 		.register();
 
 	public static final BlockEntityEntry<LargeWaterWheelBlockEntity> LARGE_WATER_WHEEL = REGISTRATE
 		.blockEntity("large_water_wheel", LargeWaterWheelBlockEntity::new)
-		.instance(() -> WaterWheelInstance::large, false)
+		.visual(() -> WaterWheelVisual::large, false)
 		.validBlocks(AllBlocks.LARGE_WATER_WHEEL)
 		.renderer(() -> WaterWheelRenderer::large)
 		.register();
@@ -672,21 +676,21 @@ public class AllBlockEntityTypes {
 
 	public static final BlockEntityEntry<MechanicalCrafterBlockEntity> MECHANICAL_CRAFTER = REGISTRATE
 		.blockEntity("mechanical_crafter", MechanicalCrafterBlockEntity::new)
-		.instance(() -> ShaftlessCogwheelInstance::new)
+		.visual(() -> SingleAxisRotatingVisual.of(AllPartialModels.SHAFTLESS_COGWHEEL))
 		.validBlocks(AllBlocks.MECHANICAL_CRAFTER)
 		.renderer(() -> MechanicalCrafterRenderer::new)
 		.register();
 
 	public static final BlockEntityEntry<SequencedGearshiftBlockEntity> SEQUENCED_GEARSHIFT = REGISTRATE
 		.blockEntity("sequenced_gearshift", SequencedGearshiftBlockEntity::new)
-		.instance(() -> SplitShaftInstance::new, false)
+		.visual(() -> SplitShaftVisual::new, false)
 		.validBlocks(AllBlocks.SEQUENCED_GEARSHIFT)
 		.renderer(() -> SplitShaftRenderer::new)
 		.register();
 
 	public static final BlockEntityEntry<SpeedControllerBlockEntity> ROTATION_SPEED_CONTROLLER = REGISTRATE
 		.blockEntity("rotation_speed_controller", SpeedControllerBlockEntity::new)
-		.instance(() -> ShaftInstance::new)
+		.visual(() -> SingleAxisRotatingVisual::shaft)
 		.validBlocks(AllBlocks.ROTATION_SPEED_CONTROLLER)
 		.renderer(() -> SpeedControllerRenderer::new)
 		.register();
@@ -870,7 +874,7 @@ public class AllBlockEntityTypes {
 
 	public static final BlockEntityEntry<FlapDisplayBlockEntity> FLAP_DISPLAY = REGISTRATE
 		.blockEntity("flap_display", FlapDisplayBlockEntity::new)
-		.instance(() -> ShaftlessCogwheelInstance::new)
+		.visual(() -> SingleAxisRotatingVisual.of(AllPartialModels.SHAFTLESS_COGWHEEL))
 		.renderer(() -> FlapDisplayRenderer::new)
 		.validBlocks(AllBlocks.DISPLAY_BOARD)
 		.register();

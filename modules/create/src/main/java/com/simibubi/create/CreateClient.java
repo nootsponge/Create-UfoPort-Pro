@@ -1,6 +1,7 @@
 package com.simibubi.create;
 
 import com.jozufozu.flywheel.fabric.event.FlywheelEvents;
+import com.jozufozu.flywheel.core.PartialModel;
 import com.simibubi.create.compat.Mods;
 import com.simibubi.create.compat.sodium.SodiumCompat;
 import com.simibubi.create.content.contraptions.glue.SuperGlueSelectionHandler;
@@ -45,7 +46,9 @@ import com.simibubi.create.infrastructure.ponder.PonderIndex;
 
 import io.github.fabricators_of_create.porting_lib_ufo.util.ArmorTextureRegistry;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 
 import com.mojang.blaze3d.platform.Window;
 
@@ -56,6 +59,7 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.packs.PackType;
 
 public class CreateClient implements ClientModInitializer {
 
@@ -77,11 +81,13 @@ public class CreateClient implements ClientModInitializer {
 	public static final ValueSettingsClient VALUE_SETTINGS_HANDLER = new ValueSettingsClient();
 
 	public static final ClientResourceReloadListener RESOURCE_RELOAD_LISTENER = new ClientResourceReloadListener();
+	private static boolean partialModelLoadingRegistered;
 
 	@Override
 	public void onInitializeClient() { // onCtorClient and clientInit merged
 //		modEventBus.addListener(CreateClient::clientInit); // merged together
 //		modEventBus.addListener(AllParticleTypes::registerFactories); // ParticleManagerRegistrationCallback in ClientEvents
+		AllSpriteShifts.init();
 		
 		FlywheelEvents.GATHER_CONTEXT.register(CreateContexts::flwInit);
 		FlywheelEvents.GATHER_CONTEXT.register(ContraptionRenderDispatcher::gatherContext);
@@ -92,6 +98,7 @@ public class CreateClient implements ClientModInitializer {
 		POTATO_CANNON_RENDER_HANDLER.registerListeners();
 
 		// clientInit start
+		registerLegacyPartialModels();
 
 		BUFFER_CACHE.registerCompartment(CachedBufferer.GENERIC_BLOCK);
 		BUFFER_CACHE.registerCompartment(CachedBufferer.PARTIAL);
@@ -118,6 +125,16 @@ public class CreateClient implements ClientModInitializer {
 //		ArmorTextureRegistry.register(AllArmorMaterials.COPPER, CopperArmorItem.TEXTURE);
 		AllFluids.initRendering();
 		initCompat();
+	}
+
+	private static void registerLegacyPartialModels() {
+		if (partialModelLoadingRegistered)
+			return;
+		partialModelLoadingRegistered = true;
+
+		ModelLoadingPlugin.register(pluginContext -> PartialModel.onModelRegistry(pluginContext::addModels));
+		ResourceManagerHelper.get(PackType.CLIENT_RESOURCES)
+			.registerReloadListener(PartialModel.ResourceReloadListener.INSTANCE);
 	}
 
 	@SuppressWarnings("Convert2MethodRef") // may cause class loading issues if changed

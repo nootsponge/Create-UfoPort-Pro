@@ -12,6 +12,8 @@ import com.jozufozu.flywheel.backend.instancing.BatchDrawingTracker;
 import com.jozufozu.flywheel.backend.instancing.TaskEngine;
 import com.jozufozu.flywheel.backend.model.DirectVertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 
 import net.minecraft.client.renderer.RenderType;
 
@@ -39,15 +41,7 @@ public class BatchedMaterialGroup implements MaterialGroup {
 
 	public void render(PoseStack stack, BatchDrawingTracker source, TaskEngine pool) {
 
-		vertexCount = 0;
-		instanceCount = 0;
-		for (BatchedMaterial<?> material : materials.values()) {
-			for (CPUInstancer<?> instancer : material.models.values()) {
-				instancer.setup();
-				vertexCount += instancer.getVertexCount();
-				instanceCount += instancer.getInstanceCount();
-			}
-		}
+		setup();
 
 		DirectVertexConsumer consumer = source.getDirectConsumer(state, vertexCount);
 
@@ -60,6 +54,45 @@ public class BatchedMaterialGroup implements MaterialGroup {
 				instancer.submitTasks(stack, pool, consumer);
 			}
 		}
+	}
+
+	public boolean renderInto(PoseStack stack, VertexConsumer consumer) {
+		setup();
+
+		if (vertexCount == 0) {
+			return false;
+		}
+
+		boolean outputColorDiffuse = !hasOverlay(state) && !ShadersModHandler.isShaderPackInUse();
+		for (BatchedMaterial<?> material : materials.values()) {
+			for (CPUInstancer<?> instancer : material.models.values()) {
+				instancer.sbb.context.outputColorDiffuse = outputColorDiffuse;
+				instancer.drawAll(stack, consumer);
+			}
+		}
+
+		return true;
+	}
+
+	private void setup() {
+		vertexCount = 0;
+		instanceCount = 0;
+		for (BatchedMaterial<?> material : materials.values()) {
+			for (CPUInstancer<?> instancer : material.models.values()) {
+				instancer.setup();
+				vertexCount += instancer.getVertexCount();
+				instanceCount += instancer.getInstanceCount();
+			}
+		}
+	}
+
+	private static boolean hasOverlay(RenderType renderType) {
+		for (VertexFormatElement element : renderType.format().getElements()) {
+			if (element.usage() == VertexFormatElement.Usage.UV && element.index() == 1) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void clear() {

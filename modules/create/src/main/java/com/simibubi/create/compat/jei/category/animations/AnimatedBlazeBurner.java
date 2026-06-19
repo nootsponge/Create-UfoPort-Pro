@@ -17,6 +17,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.Blocks;
 
@@ -62,16 +63,18 @@ public class AnimatedBlazeBurner extends AnimatedKinetics {
 
 		SpriteShiftEntry spriteShift =
 			heatLevel == HeatLevel.SEETHING ? AllSpriteShifts.SUPER_BURNER_FLAME : AllSpriteShifts.BURNER_FLAME;
+		TextureAtlasSprite target = spriteShift.getTarget();
 
-		float spriteWidth = spriteShift.getTarget()
-			.getU1()
-			- spriteShift.getTarget()
-				.getU0();
+		if (target == null || spriteShift.getOriginal() == null) {
+			matrixStack.popPose();
+			return;
+		}
 
-		float spriteHeight = spriteShift.getTarget()
-			.getV1()
-			- spriteShift.getTarget()
-				.getV0();
+		float spriteWidth = target.getU1()
+			- target.getU0();
+
+		float spriteHeight = target.getV1()
+			- target.getV0();
 
 		float time = AnimationTickHolder.getRenderTime(Minecraft.getInstance().level);
 		float speed = 1 / 32f + 1 / 64f * heatLevel.ordinal();

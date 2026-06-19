@@ -1,5 +1,10 @@
 package com.jozufozu.flywheel.backend;
 
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Properties;
+
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
@@ -12,6 +17,7 @@ import com.jozufozu.flywheel.config.FlwConfig;
 import com.jozufozu.flywheel.core.shader.ProgramSpec;
 import com.mojang.logging.LogUtils;
 
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
@@ -20,7 +26,10 @@ import net.minecraft.world.level.LevelAccessor;
 public class Backend {
 	public static final Logger LOGGER = LogUtils.getLogger();
 
-	private static BackendType backendType;
+	private static BackendType backendType = BackendType.OFF;
+
+	private static boolean loggedShaderOff;
+	private static boolean loggedShaderBatching;
 
 	private static ParallelTaskEngine taskEngine;
 
@@ -60,7 +69,12 @@ public class Backend {
 	}
 
 	public static void refresh() {
+		BackendType previousType = backendType;
 		backendType = chooseEngine();
+
+		if (previousType != backendType) {
+			LOGGER.info("Flywheel backend: {}", getBackendDescriptor());
+		}
 	}
 
 	public static boolean isOn() {
@@ -96,11 +110,25 @@ public class Backend {
 		BackendType preferredChoice = FlwConfig.get()
 				.getBackendType();
 
-		boolean usingShaders = ShadersModHandler.isShaderPackInUse();
+		boolean usingShaders = isShaderPackInUse();
+		boolean allowWithShaders = FlwConfig.get()
+				.allowBackendWithShaders() || forceBackendWithShaders();
+
+		if (usingShaders && preferredChoice == BackendType.INSTANCING && allowWithShaders) {
+			logShaderBatching();
+			return BackendType.BATCHING;
+		}
+
+		if (usingShaders && !allowWithShaders) {
+			logShaderOff();
+			return BackendType.OFF;
+		}
+
+		boolean shadersAllowed = !usingShaders || allowWithShaders;
 		boolean canUseEngine = switch (preferredChoice) {
 			case OFF -> true;
-			case BATCHING -> !usingShaders;
-			case INSTANCING -> !usingShaders && GlCompat.getInstance().instancedArraysSupported();
+			case BATCHING -> shadersAllowed;
+			case INSTANCING -> !usingShaders && instancingSupported();
 		};
 
 		return canUseEngine ? preferredChoice : BackendType.OFF;
@@ -108,6 +136,68 @@ public class Backend {
 
 	public static void init() {
 		// noop
+	}
+
+	private static boolean forceBackendWithShaders() {
+		return Boolean.getBoolean("flywheel.forceBackendWithShaders")
+				|| Boolean.getBoolean("create_ufoport.flywheel.forceBackendWithShaders");
+	}
+
+	private static boolean isShaderPackInUse() {
+		try {
+			if (ShadersModHandler.isShaderPackInUse())
+				return true;
+		} catch (Throwable ignored) {
+		}
+		return isIrisShaderPackConfigured();
+	}
+
+	private static boolean isIrisShaderPackConfigured() {
+		try {
+			Path config = FabricLoader.getInstance()
+					.getConfigDir()
+					.resolve("iris.properties");
+			if (!Files.isRegularFile(config))
+				return false;
+
+			Properties properties = new Properties();
+			try (InputStream input = Files.newInputStream(config)) {
+				properties.load(input);
+			}
+
+			if (!Boolean.parseBoolean(properties.getProperty("enableShaders", "false")))
+				return false;
+
+			String shaderPack = properties.getProperty("shaderPack", "")
+					.trim();
+			return !shaderPack.isEmpty() && !"OFF".equalsIgnoreCase(shaderPack) && !"null".equalsIgnoreCase(shaderPack);
+		} catch (Throwable ignored) {
+			return false;
+		}
+	}
+
+	private static void logShaderOff() {
+		if (loggedShaderOff)
+			return;
+		LOGGER.warn("Create-UfoPort: active Iris shaderpack detected before legacy Flywheel backend selection; forcing legacy backend to off.");
+		loggedShaderOff = true;
+	}
+
+	private static void logShaderBatching() {
+		if (loggedShaderBatching)
+			return;
+		LOGGER.warn("Create-UfoPort: active Iris shaderpack detected; using legacy Flywheel batching instead of GL instancing.");
+		loggedShaderBatching = true;
+	}
+
+	private static boolean instancingSupported() {
+		try {
+			return GlCompat.getInstance()
+					.instancedArraysSupported();
+		} catch (Throwable t) {
+			LOGGER.warn("Flywheel instancing unavailable while probing OpenGL capabilities.", t);
+			return false;
+		}
 	}
 
 	private Backend() {

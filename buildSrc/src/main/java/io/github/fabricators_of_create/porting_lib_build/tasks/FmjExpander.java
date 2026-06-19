@@ -19,6 +19,7 @@ import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.Locale;
@@ -33,12 +34,14 @@ public class FmjExpander extends FilterReader {
 	public static final String PROJECT_NAME_PARAM = "projectName";
 	public static final String PROJECT_DIR_PARAM = "projectDir";
 	public static final String ROOT_PROJECT_DIR_PARAM = "rootProjectDir";
+	public static final String SKIP_AUTOMATIC_MIXINS_PARAM = "skipAutomaticMixins";
 
 	private boolean hasExpanded = false;
 
 	private String projectName;
 	private String projectDir;
 	private String rootProjectDir;
+	private String skipAutomaticMixins;
 
 	private Path projectDirPath;
 	private Path rootProjectDirPath;
@@ -93,21 +96,23 @@ public class FmjExpander extends FilterReader {
 		String name = "" + this.projectName;
 		Path resources = this.projectDirPath.resolve(RESOURCES);
 
-		// fill in mixins
-		JsonArray array = new JsonArray();
-		int mixinsFound = 0;
-		try (Stream<Path> files = Files.list(resources)) {
-			List<Path> glist = files.filter(file -> file.toString().endsWith(".mixins.json")).toList();
-			for (Path mixins : glist) {
-				if (Files.exists(mixins)) {
-					String mixinsFileName = mixins.getFileName().toString();
-					mixinsFound++;
-					array.add(mixinsFileName);
+		if (!Boolean.parseBoolean(this.skipAutomaticMixins)) {
+			// fill in mixins
+			JsonArray array = new JsonArray();
+			int mixinsFound = 0;
+			try (Stream<Path> files = Files.list(resources)) {
+				List<Path> glist = files.filter(file -> file.toString().endsWith(".mixins.json")).toList();
+				for (Path mixins : glist) {
+					if (Files.exists(mixins)) {
+						String mixinsFileName = mixins.getFileName().toString();
+						mixinsFound++;
+						array.add(mixinsFileName);
+					}
 				}
 			}
+			if(mixinsFound > 0)
+				template.add("mixins", array);
 		}
-		if(mixinsFound > 0)
-			template.add("mixins", array);
 		
 		// and AW
 		String awFileName = name + ".accesswidener";
@@ -164,11 +169,15 @@ public class FmjExpander extends FilterReader {
 	public record Applicator(Project project) implements Action<FileCopyDetails> {
 		@Override
 		public void execute(FileCopyDetails details) {
-			Map<String, String> params = Map.of(
-					PROJECT_NAME_PARAM, this.project.getName(),
-					PROJECT_DIR_PARAM, getDir(this.project),
-					ROOT_PROJECT_DIR_PARAM, getDir(this.project.getRootProject())
-			);
+			Map<String, String> params = new HashMap<>();
+			params.put(PROJECT_NAME_PARAM, this.project.getName());
+			params.put(PROJECT_DIR_PARAM, getDir(this.project));
+			params.put(ROOT_PROJECT_DIR_PARAM, getDir(this.project.getRootProject()));
+
+			Object skipAutomaticMixins = this.project.findProperty(SKIP_AUTOMATIC_MIXINS_PARAM);
+			if (skipAutomaticMixins != null) {
+				params.put(SKIP_AUTOMATIC_MIXINS_PARAM, skipAutomaticMixins.toString());
+			}
 
 			details.filter(params, FmjExpander.class);
 		}

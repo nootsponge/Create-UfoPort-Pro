@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "id": "flywheel",
-  "version": "0.9.0-a",
+  "id": "create_flywheel_compat",
+  "version": "1.0.6-compat",
 
-  "name": "Flywheel",
-  "description": "A modern engine for modded minecraft. \nPorted up to 1.21 by Vlad2509.",
+  "name": "Create Flywheel Compatibility",
+  "description": "Legacy Flywheel 0.x API and instance renderer used by Create UfoPort for Create kinetic block entities.",
   "authors": [
     "Jozufozu",
     "PepperCode1",
@@ -17,30 +17,22 @@
   },
 
   "license": "MIT",
-  "icon": "assets/flywheel/logo.png",
   "accessWidener": "flywheel.accesswidener",
-  "mixins": [
-    "flywheel.mixins.json",
-    "flywheel.sodium.mixins.json",
-    "flywheel.fabric.mixins.json"
-  ],
   "environment": "client",
   "entrypoints": {
     "client": [
       "com.jozufozu.flywheel.Flywheel"
     ]
   },
+  "mixins": [
+    "flywheel.mixins.json",
+    "flywheel.fabric.mixins.json",
+    "flywheel.sodium.mixins.json"
+  ],
   "depends": {
-    "minecraft": [
-      "1.21",
-      "1.21.1"
-    ],
+    "minecraft": "1.21.1",
     "fabricloader": ">=0.16.0",
-    "fabric-api": ">=0.100.7+1.21",
+    "fabric-api": ">=0.105.0+1.21.1",
     "java": ">=21"
-  },
-  "breaks": {
-    "sodium": "<=0.5.11",
-    "iris": "<1.8.0-beta.3+mc1.21.1"
   }
 }

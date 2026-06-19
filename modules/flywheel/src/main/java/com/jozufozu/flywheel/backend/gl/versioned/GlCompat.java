@@ -34,7 +34,7 @@ public class GlCompat {
 	public final boolean amd;
 
 	private GlCompat() {
-		GLCapabilities caps = GL.createCapabilities();
+		GLCapabilities caps = GL.getCapabilities();
 		instancedArrays = getLatest(InstancedArrays.class, caps);
 		bufferStorage = getLatest(BufferStorage.class, caps);
 
@@ -108,4 +108,3 @@ public class GlCompat {
 		}
 	}
 }
-

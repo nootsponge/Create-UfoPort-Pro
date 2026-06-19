@@ -2,10 +2,10 @@ package com.jozufozu.flywheel.core.model;
 
 import java.util.Collection;
 import java.util.function.Supplier;
+import java.nio.ByteBuffer;
 
 import org.lwjgl.BufferUtils;
 
-import com.jozufozu.flywheel.backend.model.BufferBuilderExtension;
 import com.jozufozu.flywheel.util.transform.TransformStack;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
@@ -28,28 +28,66 @@ public class ModelUtil {
 	private static final ThreadLocal<ThreadLocalObjects> THREAD_LOCAL_OBJECTS = ThreadLocal.withInitial(ThreadLocalObjects::new);
 
 	public static ShadeSeparatedBufferedData endAndCombine(BufferBuilder shadedBuilder, BufferBuilder unshadedBuilder) {
-		int unshadedStartVertex = ((BufferBuilderExtension) shadedBuilder).flywheel$getVertices();
-		MeshData unshadedBuffer = unshadedBuilder.build();
-		if (unshadedBuffer != null) {
-			// FIXME: Unshaded indices
-			((BufferBuilderExtension) shadedBuilder).flywheel$appendBufferUnsafe(unshadedBuffer.vertexBuffer());
-			unshadedBuffer.close();
+		MeshData shadedMesh = shadedBuilder.build();
+		MeshData unshadedMesh = unshadedBuilder.build();
+
+		try {
+			int shadedVertexCount = vertexCount(shadedMesh);
+			int unshadedVertexCount = vertexCount(unshadedMesh);
+			int vertexCount = shadedVertexCount + unshadedVertexCount;
+
+			MeshData.DrawState drawState = combinedDrawState(shadedMesh, unshadedMesh, vertexCount);
+			MeshData combinedMesh = new MeshData(null, drawState);
+			ByteBuffer combinedVertices = combineVertices(shadedMesh, unshadedMesh);
+
+			return new ShadeSeparatedBufferedData.NativeImpl(
+					combinedVertices,
+					BufferUtils.createByteBuffer(0),
+					combinedMesh,
+					shadedVertexCount);
+		} finally {
+			if (shadedMesh != null) {
+				shadedMesh.close();
+			}
+			if (unshadedMesh != null) {
+				unshadedMesh.close();
+			}
 		}
-		MeshData buffer = shadedBuilder.build();
-		if(buffer == null) {
-			BufferBuilderExtension ext = ((BufferBuilderExtension) shadedBuilder);
-			VertexFormat.IndexType indexType = VertexFormat.IndexType.least(0);
-			MeshData data = new MeshData(null, new MeshData.DrawState(ext.flywheel$getFormat(), 0, 0, ext.flywheel$getMode(), indexType));
-			ShadeSeparatedBufferedData bufferedData = new ShadeSeparatedBufferedData.NativeImpl(
-					BufferUtils.createByteBuffer(0), 
-					BufferUtils.createByteBuffer(0), 
-					data, 
-					unshadedStartVertex);
-			return bufferedData;
+	}
+
+	private static int vertexCount(MeshData mesh) {
+		return mesh == null ? 0 : mesh.drawState()
+				.vertexCount();
+	}
+
+	private static MeshData.DrawState combinedDrawState(MeshData shadedMesh, MeshData unshadedMesh, int vertexCount) {
+		MeshData.DrawState template = shadedMesh != null ? shadedMesh.drawState() : unshadedMesh != null ? unshadedMesh.drawState() : null;
+		VertexFormat format = template != null ? template.format() : DefaultVertexFormat.BLOCK;
+		VertexFormat.Mode mode = template != null ? template.mode() : VertexFormat.Mode.QUADS;
+		VertexFormat.IndexType indexType = VertexFormat.IndexType.least(mode.indexCount(vertexCount));
+		return new MeshData.DrawState(format, vertexCount, mode.indexCount(vertexCount), mode, indexType);
+	}
+
+	private static ByteBuffer combineVertices(MeshData shadedMesh, MeshData unshadedMesh) {
+		int size = bufferSize(shadedMesh) + bufferSize(unshadedMesh);
+		ByteBuffer combined = BufferUtils.createByteBuffer(size);
+		appendVertices(combined, shadedMesh);
+		appendVertices(combined, unshadedMesh);
+		combined.flip();
+		return combined;
+	}
+
+	private static int bufferSize(MeshData mesh) {
+		return mesh == null ? 0 : mesh.vertexBuffer()
+				.remaining();
+	}
+
+	private static void appendVertices(ByteBuffer target, MeshData mesh) {
+		if (mesh == null) {
+			return;
 		}
-		ShadeSeparatedBufferedData bufferedData = new ShadeSeparatedBufferedData.NativeImpl(buffer.vertexBuffer(), buffer.indexBuffer(), buffer, unshadedStartVertex);
-		buffer.close();
-		return bufferedData;
+		target.put(mesh.vertexBuffer()
+				.duplicate());
 	}
 
 	public static ShadeSeparatedBufferedData getBufferedData(Bufferable bufferable) {

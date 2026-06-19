@@ -28,7 +28,7 @@ public class FlwConfig {
 	protected static final Logger LOGGER = LogManager.getLogger("Flywheel Config");
 	protected static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-	private static final FlwConfig INSTANCE = new FlwConfig(FabricLoader.getInstance().getConfigDir().resolve("flywheel.json").toFile());
+	private static final FlwConfig INSTANCE = new FlwConfig(FabricLoader.getInstance().getConfigDir().resolve("create_flywheel_compat.json").toFile());
 
 	protected final File file;
 	protected final Object2ObjectLinkedOpenHashMap<String, Option<?>> optionMap = new Object2ObjectLinkedOpenHashMap<>();
@@ -40,6 +40,12 @@ public class FlwConfig {
 	public final BooleanOption debugNormals = addOption(new BooleanOption("debugNormals", false));
 	/** Enable or disable instance update limiting with distance. */
 	public final BooleanOption limitUpdates = addOption(new BooleanOption("limitUpdates", true));
+	/** Allow the selected backend to stay enabled while a shaderpack is active. */
+	public final BooleanOption allowBackendWithShaders = addOption(new BooleanOption("allowBackendWithShaders", true));
+	/** Skip IrisFLW's Flywheel shadow pass for instanced visuals to reduce shader GPU spikes. */
+	public final BooleanOption skipIrisFlwShadowPass = addOption(new BooleanOption("skipIrisFlwShadowPass", false));
+	/** Disable Create-UfoPort's IrisFLW shadow-pass skip. */
+	public final BooleanOption disableIrisFlwShadowPassSkip = addOption(new BooleanOption("disableIrisFlwShadowPassSkip", false));
 
 	public FlwConfig(File file) {
 		this.file = file;
@@ -63,6 +69,18 @@ public class FlwConfig {
 
 	public boolean limitUpdates() {
 		return limitUpdates.get();
+	}
+
+	public boolean allowBackendWithShaders() {
+		return allowBackendWithShaders.get();
+	}
+
+	public boolean skipIrisFlwShadowPass() {
+		return skipIrisFlwShadowPass.get();
+	}
+
+	public boolean disableIrisFlwShadowPassSkip() {
+		return disableIrisFlwShadowPassSkip.get();
 	}
 
 	public void load() {

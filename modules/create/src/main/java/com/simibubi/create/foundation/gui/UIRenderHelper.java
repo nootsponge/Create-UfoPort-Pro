@@ -41,8 +41,12 @@ public class UIRenderHelper {
 	}
 
 	public static void updateWindowSize(Window mainWindow) {
-		if (framebuffer != null)
+		if (framebuffer != null) {
 			framebuffer.resize(mainWindow.getWidth(), mainWindow.getHeight(), Minecraft.ON_OSX);
+			Minecraft.getInstance()
+				.getMainRenderTarget()
+				.bindWrite(false);
+		}
 	}
 
 	public static void drawFramebuffer(float alpha) {

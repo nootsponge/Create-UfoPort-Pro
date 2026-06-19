@@ -18,6 +18,7 @@ import com.jozufozu.flywheel.fabric.event.FlywheelEvents;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -49,13 +50,14 @@ public class LevelRendererMixin {
 	@Inject(at = @At("TAIL"), method = "renderSectionLayer")
 	private void renderLayer(RenderType type, double camX, double camY, double camZ, Matrix4f frustum,
 			Matrix4f projection, CallbackInfo ci) {
+		if (FabricLoader.getInstance().isModLoaded("sodium")) {
+			return;
+		}
 		
 		PoseStack ps = new PoseStack();
-		ps.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-		ps.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0f));
 		
 		FlywheelEvents.RENDER_LAYER.invoker()
-				.handleEvent(new RenderLayerEvent(level, type, ps, renderBuffers, camX, camY, camZ));
+				.handleEvent(new RenderLayerEvent(level, type, ps, renderBuffers, camX, camY, camZ, frustum, projection));
 	}
 
 	@Inject(at = @At("TAIL"), method = "allChanged")

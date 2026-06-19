@@ -9,15 +9,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import com.jozufozu.flywheel.api.MaterialManager;
 import com.jozufozu.flywheel.backend.instancing.InstancedRenderRegistry;
 import com.jozufozu.flywheel.backend.instancing.entity.EntityInstance;
-import com.simibubi.create.Create;
 import com.tterrag.registrate.AbstractRegistrate;
 import com.tterrag.registrate.builders.BuilderCallback;
 import com.tterrag.registrate.builders.EntityBuilder;
 import com.tterrag.registrate.fabric.EnvExecutor;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 
+import dev.engine_room.flywheel.lib.visualization.SimpleEntityVisualizer;
 import net.fabricmc.api.EnvType;
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -27,7 +26,10 @@ public class CreateEntityBuilder<T extends Entity, P> extends EntityBuilder<T, P
 
 	@Nullable
 	private NonNullSupplier<BiFunction<MaterialManager, T, EntityInstance<? super T>>> instanceFactory;
-	private Predicate<T> renderNormally;
+	private Predicate<T> instanceRenderNormally;
+	@Nullable
+	private NonNullSupplier<SimpleEntityVisualizer.Factory<T>> visualFactory;
+	private Predicate<T> visualRenderNormally;
 
 	public static <T extends Entity, P> EntityBuilder<T, P> create(AbstractRegistrate<?> owner, P parent, String name, BuilderCallback callback, EntityType.EntityFactory<T> factory, MobCategory classification) {
 		return (new CreateEntityBuilder<>(owner, parent, name, callback, factory, classification)).defaultLang();
@@ -51,7 +53,7 @@ public class CreateEntityBuilder<T extends Entity, P> extends EntityBuilder<T, P
 		}
 
 		this.instanceFactory = instanceFactory;
-		this.renderNormally = renderNormally;
+		this.instanceRenderNormally = renderNormally;
 
 		return this;
 	}
@@ -60,9 +62,40 @@ public class CreateEntityBuilder<T extends Entity, P> extends EntityBuilder<T, P
 		onRegister(entry ->
 				InstancedRenderRegistry.configure(entry)
 						.factory(instanceFactory.get())
-						.skipRender(be -> !renderNormally.test(be))
+						.skipRender(be -> !instanceRenderNormally.test(be))
 						.apply()
 		);
+	}
+
+	public CreateEntityBuilder<T, P> visual(NonNullSupplier<SimpleEntityVisualizer.Factory<T>> visualFactory) {
+		return visual(visualFactory, true);
+	}
+
+	public CreateEntityBuilder<T, P> visual(NonNullSupplier<SimpleEntityVisualizer.Factory<T>> visualFactory, boolean renderNormally) {
+		return visual(visualFactory, entity -> renderNormally);
+	}
+
+	public CreateEntityBuilder<T, P> visual(NonNullSupplier<SimpleEntityVisualizer.Factory<T>> visualFactory, Predicate<T> renderNormally) {
+		if (this.visualFactory == null) {
+			EnvExecutor.runWhenOn(EnvType.CLIENT, () -> this::registerVisualizer);
+		}
+
+		this.visualFactory = visualFactory;
+		this.visualRenderNormally = renderNormally;
+
+		return this;
+	}
+
+	protected void registerVisualizer() {
+		onRegister(entry -> {
+			var visualFactory = this.visualFactory;
+			if (visualFactory != null) {
+				SimpleEntityVisualizer.builder(entry)
+					.factory(visualFactory.get())
+					.skipVanillaRender(entity -> !visualRenderNormally.test(entity))
+					.apply();
+			}
+		});
 	}
 
 }

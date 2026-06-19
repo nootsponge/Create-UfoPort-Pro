@@ -9,11 +9,11 @@ import io.github.fabricators_of_create.porting_lib_ufo.models.materials.extensio
 
 @Mixin(BakedQuad.class)
 public class BakedQuadMixin implements BakedQuadExtensions {
-	private MaterialData port_lib$renderMaterial;
+	private MaterialData port_lib$renderMaterial = MaterialData.DEFAULT;
 
 	@Override
 	public void port_lib$setRenderMaterial(MaterialData material) {
-		this.port_lib$renderMaterial = material;
+		this.port_lib$renderMaterial = material == null ? MaterialData.DEFAULT : material;
 	}
 
 	@Override

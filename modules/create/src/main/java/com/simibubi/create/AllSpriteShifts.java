@@ -139,4 +139,8 @@ public class AllSpriteShifts {
 		return WOODEN_WINDOWS.get(woodType);
 	}
 
+	public static void init() {
+		// Load this class during client setup so sprite shifts exist before the first atlas upload.
+	}
+
 }

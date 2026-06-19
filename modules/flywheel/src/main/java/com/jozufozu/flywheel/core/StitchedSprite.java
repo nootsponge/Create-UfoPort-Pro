@@ -12,6 +12,7 @@ import net.minecraft.world.inventory.InventoryMenu;
 
 public class StitchedSprite {
 	private static final Map<ResourceLocation, List<StitchedSprite>> ALL = new HashMap<>();
+	private static final Map<ResourceLocation, TextureAtlas> LOADED_ATLASES = new HashMap<>();
 
 	protected final ResourceLocation atlasLocation;
 	protected final ResourceLocation location;
@@ -21,6 +22,10 @@ public class StitchedSprite {
 		atlasLocation = atlas;
 		this.location = location;
 		ALL.computeIfAbsent(atlasLocation, $ -> new ArrayList<>()).add(this);
+
+		TextureAtlas atlasInstance = LOADED_ATLASES.get(atlasLocation);
+		if (atlasInstance != null)
+			loadSprite(atlasInstance);
 	}
 
 	public StitchedSprite(ResourceLocation location) {
@@ -29,9 +34,10 @@ public class StitchedSprite {
 
 	public static void onTextureStitchPost(TextureAtlas atlas) {
 		ResourceLocation atlasLocation = atlas.location();
+		LOADED_ATLASES.put(atlasLocation, atlas);
 		List<StitchedSprite> sprites = ALL.get(atlasLocation);
 		if (sprites != null) {
-			for (StitchedSprite sprite : sprites) {
+			for (StitchedSprite sprite : new ArrayList<>(sprites)) {
 				sprite.loadSprite(atlas);
 			}
 		}

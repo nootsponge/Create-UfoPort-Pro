@@ -12,6 +12,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.AllPartialModels;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import com.simibubi.create.foundation.render.CachedBufferer;
+import com.simibubi.create.foundation.render.FlywheelVisualHelper;
 import com.simibubi.create.foundation.render.SuperByteBuffer;
 import com.simibubi.create.foundation.utility.AngleHelper;
 import com.simibubi.create.foundation.utility.AnimationTickHolder;
@@ -44,7 +45,8 @@ public class FlapDisplayRenderer extends KineticBlockEntityRenderer<FlapDisplayB
 	@Override
 	protected void renderSafe(FlapDisplayBlockEntity be, float partialTicks, PoseStack ms, MultiBufferSource buffer,
 			int light, int overlay) {
-		super.renderSafe(be, partialTicks, ms, buffer, light, overlay);
+		if (!FlywheelVisualHelper.isVisualizationActive(be.getLevel()))
+			super.renderSafe(be, partialTicks, ms, buffer, light, overlay);
 
 		Font fontRenderer = Minecraft.getInstance().font;
 		FontSet fontSet = ((FontAccessor) fontRenderer).port_lib$getFontSet(Style.DEFAULT_FONT);
